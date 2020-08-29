@@ -1,63 +1,38 @@
 import DynamicCodable
 import Foundation
 
-struct HomeScreenRoute: Route, Equatable {
+protocol Route: DynamicCodable {
+    static var type: String { get }
+}
+
+struct HomeScreenRoute: Route, Codable, Equatable {
+    static let type = "homescreen"
+
     let type: String
 
     init() {
-        self.type = Self.typeByNamingConvention
+        type = Self.type
     }
 }
 
-struct DetailScreenRoute: Route, Equatable {
-    let type: String
+struct DetailScreenRoute: Route, Codable, Equatable {
+    static let type = "detailscreen"
+
     let id: UUID
+    let type: String
 
     init(id: UUID) {
-        self.type = Self.typeByNamingConvention
         self.id = id
+        type = Self.type
     }
 }
 
-struct OverviewScreen: Codable {
-    let routes: [Route]
-    let route: Route
-
-    enum CodingKeys: String, CodingKey {
-        case routes, route
-    }
+struct HomeScreen: Codable, Equatable {
+    let routes: [AnyCodable<Route>]
+    let route: AnyCodable<Route>
 
     init(routes: [Route], route: Route) {
-        self.routes = routes
-        self.route = route
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        routes = try container.decode([Route].self, forKey: .routes)
-        route = try container.decode(Route.self, forKey: .route)
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(routes, forKey: .routes)
-        try container.encode(route, forKey: .route)
-    }
-}
-
-extension OverviewScreen: Equatable {
-    static func == (lhs: OverviewScreen, rhs: OverviewScreen) -> Bool {
-        zip(lhs.routes, rhs.routes).allSatisfy(isEqual) && isEqual(lhs: lhs.route, rhs: rhs.route)
-    }
-
-    private static func isEqual(lhs: Route, rhs: Route) -> Bool {
-        switch (lhs, rhs) {
-        case let (lhs as DetailScreenRoute, rhs as DetailScreenRoute):
-            return lhs == rhs
-        case let (lhs as HomeScreenRoute, rhs as HomeScreenRoute):
-            return lhs == rhs
-        default:
-            return false
-        }
+        self.routes = routes.map(AnyCodable.init)
+        self.route = AnyCodable(route)
     }
 }

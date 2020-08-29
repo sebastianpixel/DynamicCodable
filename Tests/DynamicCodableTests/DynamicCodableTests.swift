@@ -6,14 +6,21 @@ final class DynamicCodableTests: XCTestCase {
     override class func setUp() {
         super.setUp()
 
-        DynamicDecodableRegistry.register(DetailScreenRoute.self)
-        DynamicDecodableRegistry.register(HomeScreenRoute.self)
+        DynamicDecodableRegistry.register(DetailScreenRoute.self, typeIdentifier: DetailScreenRoute.type)
+        DynamicDecodableRegistry.register(HomeScreenRoute.self, typeIdentifier: HomeScreenRoute.type)
     }
 
     func testEncodingAndDecoding() throws {
-        let overview = OverviewScreen(routes: [DetailScreenRoute(id: .init()), HomeScreenRoute()], route: HomeScreenRoute())
+        let overview = HomeScreen(
+            routes: [
+                DetailScreenRoute(id: .init()),
+                DetailScreenRoute(id: .init())
+            ],
+            route: HomeScreenRoute()
+            )
         let encoded = try JSONEncoder().encode(overview)
-        let decoded = try JSONDecoder().decode(OverviewScreen.self, from: encoded)
+        print(String(data: encoded, encoding: .utf8)!)
+        let decoded = try JSONDecoder().decode(HomeScreen.self, from: encoded)
 
         XCTAssertEqual(overview, decoded)
     }
