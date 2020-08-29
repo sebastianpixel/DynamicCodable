@@ -2,14 +2,23 @@ import XCTest
 @testable import DynamicCodable
 
 final class DynamicCodableTests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(DynamicCodable().text, "Hello, World!")
+
+    override class func setUp() {
+        super.setUp()
+
+        DynamicDecodableRegistry.register(DetailScreenRoute.self)
+        DynamicDecodableRegistry.register(HomeScreenRoute.self)
+    }
+
+    func testEncodingAndDecoding() throws {
+        let overview = OverviewScreen(routes: [DetailScreenRoute(id: .init()), HomeScreenRoute()], route: HomeScreenRoute())
+        let encoded = try JSONEncoder().encode(overview)
+        let decoded = try JSONDecoder().decode(OverviewScreen.self, from: encoded)
+
+        XCTAssertEqual(overview, decoded)
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testEncodingAndDecoding", testEncodingAndDecoding),
     ]
 }
