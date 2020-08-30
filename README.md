@@ -5,14 +5,12 @@ Swift Property Wrappers based on `Codable` for decoding (and encoding) types tha
 ## Usage
 `DynamicCodable` provides a way to (de)serialize types by wrapping them in `DymamicEncodable`, `DymamicDecodable` or their combination `DynamicCodable`. Those types are generic over the wrapped types and expose them as `value` property.
 ```
-struct HomeScreen: Codable {
-    let routes: [DynamicCodable<Route>]
-    @DynamicCodable var route: Route
+protocol Route: DynamicCodableProtocol {}
 
-    init(routes: [Route], route: Route) {
-        self.routes = routes.map(DynamicCodable.init)
-        _route = DynamicCodable(route)
-    }
+struct HomeScreen: Codable {
+    @DynamicCodable var route: Route
+    @DynamicCodable var routes: [Route]
+    @DynamicCodable var routeDict: [String: Route]
 }
 ```
 To deserialize a `HomeScreen` the types to decode need to be registered in `DynamicDecodableRegistry`:
