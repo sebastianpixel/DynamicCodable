@@ -40,10 +40,16 @@ public struct DynamicEncodable<Value>: Encodable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
+        if let encodableArray = wrappedValue as? [Encodable] {
+            var container = encoder.unkeyedContainer()
+            try encodableArray.encode(to: &container)
+            return
+        }
+
         guard let encodable = wrappedValue as? Encodable else {
             throw Error.encodingFailed("\(Value.self) must implement Encodable in order to be wrapped in AnyCodable")
         }
+        var container = encoder.singleValueContainer()
         try encodable.encode(to: &container)
     }
 }
@@ -51,6 +57,16 @@ public struct DynamicEncodable<Value>: Encodable {
 private extension Encodable {
     func encode(to container: inout SingleValueEncodingContainer) throws {
         try container.encode(self)
+    }
+
+    func encode(to container: inout UnkeyedEncodingContainer) throws {
+        try container.encode(self)
+    }
+}
+
+private extension Array where Element == Encodable {
+    func encode(to container: inout UnkeyedEncodingContainer) throws {
+        try forEach { try $0.encode(to: &container) }
     }
 }
 
@@ -79,14 +95,28 @@ public struct DynamicDecodable<Value>: Decodable {
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let typeIdentifier = try container.decode(String.self, forKey: .type)
-        guard let type = DynamicDecodableRegistry.type(for: typeIdentifier) else {
-            throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in AnyDecodableRegistry.")
-        }
-        let decodable = try type.init(from: decoder)
-        guard let value = decodable as? Value else {
-            throw Error.decodingFailed("Could not cast type \(Swift.type(of: decodable)) to \(Value.self)")
+        let value: Value
+        if var unkeyedContainer = try? decoder.unkeyedContainer() {
+            var array = [DynamicDecodable<Any>]()
+            while !unkeyedContainer.isAtEnd {
+                try array.append(unkeyedContainer.decode(DynamicDecodable<Any>.self))
+            }
+            let values = array.map(\.wrappedValue)
+            guard let _value = values as? Value else {
+                throw Error.decodingFailed("Could not cast array \(values) to type \(Value.self).")
+            }
+            value = _value
+        } else {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let typeIdentifier = try container.decode(String.self, forKey: .type)
+            guard let type = DynamicDecodableRegistry.type(for: typeIdentifier) else {
+                throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in AnyDecodableRegistry.")
+            }
+            let decodable = try type.init(from: decoder)
+            guard let _value = decodable as? Value else {
+                throw Error.decodingFailed("Could not cast type \(Swift.type(of: decodable)) to \(Value.self)")
+            }
+            value = _value
         }
         self.init(wrappedValue: value)
     }

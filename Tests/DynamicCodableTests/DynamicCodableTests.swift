@@ -19,7 +19,6 @@ final class DynamicCodableTests: XCTestCase {
             route: HomeScreenRoute()
             )
         let encoded = try JSONEncoder().encode(overview)
-        print(String(data: encoded, encoding: .utf8)!)
         let decoded = try JSONDecoder().decode(HomeScreen.self, from: encoded)
 
         XCTAssertEqual(overview, decoded)

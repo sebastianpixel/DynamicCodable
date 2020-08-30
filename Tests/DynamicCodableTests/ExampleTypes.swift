@@ -28,11 +28,11 @@ struct DetailScreenRoute: Route, Codable, Equatable {
 }
 
 struct HomeScreen: Codable, Equatable {
-    let routes: [DynamicCodable<Route>]
+    @DynamicCodable var routes: [Route]
     @DynamicCodable var route: Route
 
     init(routes: [Route], route: Route) {
-        self.routes = routes.map(DynamicCodable.init)
+        _routes = DynamicCodable(wrappedValue: routes)
         _route = DynamicCodable(wrappedValue: route)
     }
 }
