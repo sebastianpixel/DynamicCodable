@@ -29,6 +29,7 @@ struct DetailScreenRoute: Route, Codable, Equatable {
 
 struct HomeScreen: Codable, Equatable {
     @DynamicCodable var route: Route
+    @DynamicCodable var optionalRoute: Route?
     @DynamicCodable var routes: [Route]
     @DynamicCodable var routeDict: [String: Route]
 

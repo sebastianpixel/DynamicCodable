@@ -73,9 +73,23 @@ public struct DynamicEncodable<Value>: Encodable {
                 let codingKey = CustomCodingKey("\(key.base)")
                 try value.encode(for: codingKey, to: &container)
             }
+        } else if let optional = wrappedValue as? OptionalProtocol, optional.isNil {
+            return
         } else {
             throw Error.encodingFailed("\(Value.self) must conform to Encodable.")
         }
+    }
+}
+
+private protocol OptionalProtocol {
+    var isNil: Bool { get }
+}
+extension Optional: OptionalProtocol {
+    var isNil: Bool {
+        if case .none = self {
+            return true
+        }
+        return false
     }
 }
 
@@ -137,6 +151,8 @@ public struct DynamicDecodable<Value>: Decodable {
                     throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in \(DynamicDecodableRegistry.self).")
                 }
                 value = try type.init(from: decoder)
+            } else if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type {
+                value = optional.init(nilLiteral: ())
             } else {
                 value = try container.allKeys.reduce(into: [AnyHashable: Any]()) {
                     $0[$1.stringValue] = try container.decode(DynamicDecodable<Any>.self, forKey: $1).wrappedValue
