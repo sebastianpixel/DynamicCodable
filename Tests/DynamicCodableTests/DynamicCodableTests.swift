@@ -3,6 +3,14 @@ import XCTest
 
 final class DynamicCodableTests: XCTestCase {
 
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
+
+    private let homeScreen = HomeScreenRoute()
+    private var detailScreen: DetailScreenRoute {
+        .init(id: .init())
+    }
+
     override class func setUp() {
         super.setUp()
 
@@ -10,21 +18,51 @@ final class DynamicCodableTests: XCTestCase {
         DynamicDecodableRegistry.register(HomeScreenRoute.self, typeIdentifier: HomeScreenRoute.type)
     }
 
-    func testEncodingAndDecoding() throws {
-        let overview = HomeScreen(
-            routes: [
-                DetailScreenRoute(id: .init()),
-                DetailScreenRoute(id: .init())
-            ],
-            route: HomeScreenRoute()
-            )
-        let encoded = try JSONEncoder().encode(overview)
-        let decoded = try JSONDecoder().decode(HomeScreen.self, from: encoded)
+    func testStandardEncodingAndDecoding() throws {
+        let mock = RouteMock(route: detailScreen)
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(RouteMock.self, from: encoded)
 
-        XCTAssertEqual(overview, decoded)
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testSomeOptionalEncodingAndDecoding() throws {
+        let mock = OptionalRouteMock(route: detailScreen)
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(OptionalRouteMock.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testNoneOptionalEncodingAndDecoding() throws {
+        let mock = OptionalRouteMock(route: nil)
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(OptionalRouteMock.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testArrayEncodingAndDecoding() throws {
+        let mock = ArrayMock(routes: [detailScreen, detailScreen, homeScreen])
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(ArrayMock.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testDictionaryEncodingAndDecoding() throws {
+        let mock = DictionaryMock(routes: [detailScreen, detailScreen, homeScreen])
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(DictionaryMock.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
     }
 
     static var allTests = [
-        ("testEncodingAndDecoding", testEncodingAndDecoding),
+        ("testStandardEncodingAndDecoding", testStandardEncodingAndDecoding),
+        ("testSomeOptionalEncodingAndDecoding", testSomeOptionalEncodingAndDecoding),
+        ("testNoneOptionalEncodingAndDecoding", testNoneOptionalEncodingAndDecoding),
+        ("testArrayEncodingAndDecoding", testArrayEncodingAndDecoding),
+        ("testDictionaryEncodingAndDecoding", testDictionaryEncodingAndDecoding)
     ]
 }

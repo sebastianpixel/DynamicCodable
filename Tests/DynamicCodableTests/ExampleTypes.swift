@@ -27,19 +27,37 @@ struct DetailScreenRoute: Route, Codable, Equatable {
     }
 }
 
-struct HomeScreen: Codable, Equatable {
+struct RouteMock: Codable, Equatable {
     @DynamicCodable var route: Route
-    @DynamicCodable var optionalRoute: Route?
-    @DynamicCodable var routes: [Route]
-    @DynamicCodable var routeDict: [String: Route]
 
-    init(routes: [Route], route: Route) {
-        _routes = DynamicCodable(wrappedValue: routes)
+    init(route: Route) {
         _route = DynamicCodable(wrappedValue: route)
+    }
+}
 
-        let dict = (routes + [route]).reduce(into: [String: Route]()) {
+struct OptionalRouteMock: Codable, Equatable {
+    @DynamicCodable var route: Route?
+
+    init(route: Route?) {
+        _route = DynamicCodable(wrappedValue: route)
+    }
+}
+
+struct ArrayMock: Codable, Equatable {
+    @DynamicCodable var routes: [Route]
+
+    init(routes: [Route]) {
+        _routes = DynamicCodable(wrappedValue: routes)
+    }
+}
+
+struct DictionaryMock: Codable, Equatable {
+    @DynamicCodable var routes: [String: Route]
+
+    init(routes: [Route]) {
+        let dict = routes.reduce(into: [String: Route]()) {
             $0[$1.type] = $1
         }
-        _routeDict = DynamicCodable(wrappedValue: dict)
+        _routes = DynamicCodable(wrappedValue: dict)
     }
 }
