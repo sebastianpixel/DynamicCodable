@@ -22,11 +22,12 @@ The JSON for `HomeScreen` might look like this:
     },
     "routes": [
         {
-            "type": "homescreen"
+            "type": "detailscreen",
+            "id": "550121C5-3D8F-4AC8-AB14-BDF7E6D11626"
         },
         {
-            "type": "detailpage",
-            "id": "550121C5-3D8F-4AC8-AB14-BDF7E6D11626"
+            "type": "detailscreen",
+            "id": "697167E5-90EE-4CD2-879D-EAF49064F400"
         }
     ],
     "someRouteDict": {
