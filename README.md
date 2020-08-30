@@ -2,32 +2,56 @@
 
 Swift Property Wrappers based on `Codable` for decoding (and encoding) types that are defined in the (JSON) data that should be decoded.
 
-## Usage
-`DynamicCodable` provides a way to (de)serialize types by wrapping them in `DymamicEncodable`, `DymamicDecodable` or their combination `DynamicCodable`. Those types are generic over the wrapped types and expose them as `value` property.
+`DynamicCodable` provides a way to (de)serialize properties by wrapping them in `@DymamicEncodable`, `@DymamicDecodable` or their combination `@DynamicCodable`.
+
+## Example: Routes
 ```
 protocol Route: DynamicCodableProtocol {}
 
 struct HomeScreen: Codable {
-    @DynamicCodable var route: Route
+    @DynamicCodable var `self`: Route
     @DynamicCodable var routes: [Route]
-    @DynamicCodable var routeDict: [String: Route]
+    @DynamicCodable var someRouteDict: [String: Route]
 }
 ```
-To deserialize a `HomeScreen` the types to decode need to be registered in `DynamicDecodableRegistry`:
+The JSON for `HomeScreen` might look like this:
+```
+{
+    "self": {
+        "type": "homescreen"
+    },
+    "routes": [
+        {
+            "type": "homescreen"
+        },
+        {
+            "type": "detailpage",
+            "id": "550121C5-3D8F-4AC8-AB14-BDF7E6D11626"
+        }
+    ],
+    "someRouteDict": {
+        "profilescreen": {
+            "type": "profilescreen",
+            "id": "84874B0F-1F41-4380-B3C6-CC53A0DE5453",
+            "tracking": {
+                "some_tracking_service": {
+                    "some_tracking_property": "some_tracking_value"
+                }
+            }
+        }
+    }
+}
+```
+`Route`s have the field `type` in common (which also is the single requirement of `DynamicCodableProtocol`) which identifies the actual type that should be deserialized. In order for this to work types have to be registered in `DynamicDecodableRegistry` with their respective identifier.
 ```
 DynamicDecodableRegistry.register(DetailScreenRoute.self, typeIdentifier: DetailScreenRoute.type)
 DynamicDecodableRegistry.register(HomeScreenRoute.self, typeIdentifier: HomeScreenRoute.type)
+DynamicDecodableRegistry.register(ProfileScreenRoute.self, typeIdentifier: ProfileScreenRoute.type)
 ```
+To deserialize JSON like above with Swift's `Codable` alone one could define a `Route` struct that has all possible JSON fields as optional properties defined in a single place. In a modularized setup where routing targets / features like a detail screen or the home screen are separated in different modules this might not be the ideal solution. An alternative could be to not use models for routes alltogether and just deserialize dictionaries.
 
-## Example: Routes
-In a modularized app where features are separated across multiple modules one might choose to define a module for the feature's interface and one for it's implementation. This would have the benefit of them not directly depending on each other and thus being interchangable and faster to build as features would only import each others' interface. 
-
-Routing in this setup could then be achieved by each feature exposing a `Route` object in it's interface module so other features can refer to it in a type safe way. The feature would then implement a `RoutingHandler` in it's implementation module which returns a view for the route. 
-
-`Route`s are not limited to static use though. If an overview screen has links to various detail screens `Route` objects could be serialized as JSON and decoded in the app. The issue here is that properties might differ from `Route` to `Route`: the `DetailScreenRoute` might need an `id` in contrast to the `HomeScreenRoute`  where there's only one home screen.
+By using `DynamicCodable` Swift's type system can be leveraged to create clean interfaces with types that define individual optional and non-optional properties. In a possible routing setup like to following `DetailScreenRouteHandler` would have access to `DetailScreenRoute`'s `id` property without the need to unwrap an optional value and get only the information that is needed.
 ```
-protocol Route: DynamicCodableProtocol {}
-
 protocol RouteHandler {
     associatedtype ConcreteRoute: Route
     associatedtype Content: View
@@ -35,17 +59,15 @@ protocol RouteHandler {
 }
 
 protocol Router {
-    func route(_ route: Route)
+    func callAsFunction(_ route: Route)
     func register<Handler: RouteHandler>(_ handler: Handler)
 }
 
 // Interface module "HomeScreen" 
-struct HomeScreenRoute: Route, Equatable {
-    let type: String
+struct HomeScreenRoute: Route {
+    static let type = "homescreen"
 
-    init() {
-        self.type = Self.typeByNamingConvention
-    }
+    let type: String
 }
 
 // Implementation module "HomeScreenImplementation"
@@ -56,14 +78,11 @@ struct HomeScreenRouteHandler: RouteHandler {
 }
 
 // Interface module "DetailScreen"
-struct DetailScreenRoute: Route, Equatable {
+struct DetailScreenRoute: Route {
+    static let type = "homescreen"
+
     let type: String
     let id: UUID
-
-    init(id: UUID) {
-        self.type = Self.typeByNamingConvention
-        self.id = id
-    }
 }
 
 // Implementation module "DetailScreenImplementation"
@@ -73,24 +92,6 @@ struct DetailScreenRouteHandler: RouteHandler {
     }
 }
 ```
-The JSON for such `Route`s could look like this:
-```
-[
-    {
-        "type": "homescreen"
-    },
-    {
-        "type": "detailpage",
-        "id": "550121C5-3D8F-4AC8-AB14-BDF7E6D11626"
-    }
-]
-```
-Based on the `type` property first a `HomeScreenRoute` should be deserialized, then  a `DetailScreenRoute`.
-
-Swift's `Codable` would require to either define a `struct Route` where all properties but `type` would have to be `Optional`s or - if the JSON is always flat - one could opt for deserializing a `Dictionary<String: String>` instead.
-
-By using `DynamicCodable` the `DetailScreenRouteHandler` from the example above would have access to `DetailScreenRoute`'s `id` property without the need to unwrap an Optional value and get only the information that is needed.
-
 ## Constraints
 * Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodableProtocol`.
-* Types must be registered in `DynamicDecodableRegistry` (which is then referenced in extensions of Coding Containers) for decoding with an identifier of type String (which is then matched with the value of the `type` field).
+* Types must be registered in `DynamicDecodableRegistry`  for decoding with an identifier of type String (which is then matched with the value of the `type` field for decoding).
