@@ -1,17 +1,17 @@
 # DynamicCodable
 
-Wrapper types based on Swift's `Codable` for decoding (and encoding) types that are defined in the (JSON) data that should be decoded.
+Swift Property Wrappers based on `Codable` for decoding (and encoding) types that are defined in the (JSON) data that should be decoded.
 
 ## Usage
-`DynamicCodable` provides a way to (de)serialize types by wrapping them in `AnyEncodable`, `AnyDecodable` or their combination `AnyCodable`. Those types are generic over the wrapped types and expose them as `value` property.
+`DynamicCodable` provides a way to (de)serialize types by wrapping them in `DymamicEncodable`, `DymamicDecodable` or their combination `DynamicCodable`. Those types are generic over the wrapped types and expose them as `value` property.
 ```
 struct HomeScreen: Codable {
-    let routes: [AnyCodable<Route>]
-    let route: AnyCodable<Route>
+    let routes: [DynamicCodable<Route>]
+    @DynamicCodable var route: Route
 
     init(routes: [Route], route: Route) {
-        self.routes = routes.map(AnyCodable.init)
-        self.route = AnyCodable(route)
+        self.routes = routes.map(DynamicCodable.init)
+        _route = DynamicCodable(route)
     }
 }
 ```
@@ -28,7 +28,7 @@ Routing in this setup could then be achieved by each feature exposing a `Route` 
 
 `Route`s are not limited to static use though. If an overview screen has links to various detail screens `Route` objects could be serialized as JSON and decoded in the app. The issue here is that properties might differ from `Route` to `Route`: the `DetailScreenRoute` might need an `id` in contrast to the `HomeScreenRoute`  where there's only one home screen.
 ```
-protocol Route: DynamicCodable {}
+protocol Route: DynamicCodableProtocol {}
 
 protocol RouteHandler {
     associatedtype ConcreteRoute: Route
@@ -94,5 +94,5 @@ Swift's `Codable` would require to either define a `struct Route` where all prop
 By using `DynamicCodable` the `DetailScreenRouteHandler` from the example above would have access to `DetailScreenRoute`'s `id` property without the need to unwrap an Optional value and get only the information that is needed.
 
 ## Constraints
-* Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodable`.
+* Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodableProtocol`.
 * Types must be registered in `DynamicDecodableRegistry` (which is then referenced in extensions of Coding Containers) for decoding with an identifier of type String (which is then matched with the value of the `type` field).

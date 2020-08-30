@@ -1,7 +1,7 @@
 import DynamicCodable
 import Foundation
 
-protocol Route: DynamicCodable {
+protocol Route: DynamicCodableProtocol {
     static var type: String { get }
 }
 
@@ -28,11 +28,11 @@ struct DetailScreenRoute: Route, Codable, Equatable {
 }
 
 struct HomeScreen: Codable, Equatable {
-    let routes: [AnyCodable<Route>]
-    let route: AnyCodable<Route>
+    let routes: [DynamicCodable<Route>]
+    @DynamicCodable var route: Route
 
     init(routes: [Route], route: Route) {
-        self.routes = routes.map(AnyCodable.init)
-        self.route = AnyCodable(route)
+        self.routes = routes.map(DynamicCodable.init)
+        _route = DynamicCodable(wrappedValue: route)
     }
 }

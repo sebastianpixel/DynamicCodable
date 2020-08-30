@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol DynamicCodable {
+public protocol DynamicCodableProtocol {
     /// Instance type property necessary for retrieving the type to
     /// decode and encoding it for later re-decoding.
     ///
@@ -12,7 +12,7 @@ public protocol DynamicCodable {
 /// The one location where dynamic type identifiers are mapped
 /// to the types that should be decoded.
 public final class DynamicDecodableRegistry {
-    public typealias DynamicDecodable = DynamicCodable & Decodable
+    public typealias DynamicDecodable = DynamicCodableProtocol & Decodable
 
     private static var types = [String: DynamicDecodable.Type]()
 
@@ -26,21 +26,22 @@ public final class DynamicDecodableRegistry {
     }
 }
 
-public struct AnyEncodable<Value>: Encodable {
+@propertyWrapper
+public struct DynamicEncodable<Value>: Encodable {
 
     public enum Error: Swift.Error {
         case encodingFailed(String)
     }
 
-    public let value: Value
+    public var wrappedValue: Value
 
-    public init(_ value: Value) {
-        self.value = value
+    public init(wrappedValue: Value) {
+        self.wrappedValue = wrappedValue
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        guard let encodable = value as? Encodable else {
+        guard let encodable = wrappedValue as? Encodable else {
             throw Error.encodingFailed("\(Value.self) must implement Encodable in order to be wrapped in AnyCodable")
         }
         try encodable.encode(to: &container)
@@ -53,14 +54,15 @@ private extension Encodable {
     }
 }
 
-extension AnyEncodable: Equatable {
-    public static func == (lhs: AnyEncodable<Value>, rhs: AnyEncodable<Value>) -> Bool {
+extension DynamicEncodable: Equatable {
+    public static func == (lhs: DynamicEncodable<Value>, rhs: DynamicEncodable<Value>) -> Bool {
         let jsonEncoder = JSONEncoder()
         return (try? jsonEncoder.encode(lhs) == jsonEncoder.encode(rhs)) ?? false
     }
 }
 
-public struct AnyDecodable<Value>: Decodable {
+@propertyWrapper
+public struct DynamicDecodable<Value>: Decodable {
 
     public enum Error: Swift.Error {
         case decodingFailed(String)
@@ -70,10 +72,10 @@ public struct AnyDecodable<Value>: Decodable {
         case type
     }
 
-    public let value: Value
+    public var wrappedValue: Value
 
-    public init(_ value: Value) {
-        self.value = value
+    public init(wrappedValue: Value) {
+        self.wrappedValue = wrappedValue
     }
 
     public init(from decoder: Decoder) throws {
@@ -86,40 +88,39 @@ public struct AnyDecodable<Value>: Decodable {
         guard let value = decodable as? Value else {
             throw Error.decodingFailed("Could not cast type \(Swift.type(of: decodable)) to \(Value.self)")
         }
-        self.init(value)
+        self.init(wrappedValue: value)
     }
 }
 
-extension AnyDecodable: Equatable where Value: Equatable {}
+extension DynamicDecodable: Equatable where Value: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.wrappedValue == rhs.wrappedValue
+    }
+}
 
-public struct AnyCodable<Value>: Codable {
+@propertyWrapper
+public final class DynamicCodable<Value>: Codable {
+    public var wrappedValue: Value
 
-    public let value: Value
-
-    public init(_ value: Value) {
-        self.value = value
+    public init(wrappedValue: Value) {
+        self.wrappedValue = wrappedValue
     }
 
     private enum CodingKeys: CodingKey {
         case type
     }
 
-    public init(from decoder: Decoder) throws {
-        let anyDecodable = try AnyDecodable<Value>(from: decoder)
-        self.init(anyDecodable.value)
+    required public convenience init(from decoder: Decoder) throws {
+        try self.init(wrappedValue: DynamicDecodable<Value>(from: decoder).wrappedValue)
     }
 
     public func encode(to encoder: Encoder) throws {
-        let value = AnyEncodable(self.value).value
-        // swiftlint:disable:this force_cast
-        let encodable = value as! Encodable
-        var container = encoder.singleValueContainer()
-        try encodable.encode(to: &container)
+        try DynamicEncodable(wrappedValue: self.wrappedValue).encode(to: encoder)
     }
 }
 
-extension AnyCodable: Equatable {
-    public static func == (lhs: AnyCodable<Value>, rhs: AnyCodable<Value>) -> Bool {
-        AnyEncodable(lhs) == AnyEncodable(rhs)
+extension DynamicCodable: Equatable {
+    public static func == (lhs: DynamicCodable<Value>, rhs: DynamicCodable<Value>) -> Bool {
+        DynamicEncodable(wrappedValue: lhs) == DynamicEncodable(wrappedValue: rhs)
     }
 }
