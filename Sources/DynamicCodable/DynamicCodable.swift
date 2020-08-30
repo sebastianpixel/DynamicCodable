@@ -47,7 +47,7 @@ public struct DynamicEncodable<Value>: Encodable {
         }
 
         guard let encodable = wrappedValue as? Encodable else {
-            throw Error.encodingFailed("\(Value.self) must implement Encodable in order to be wrapped in AnyCodable")
+            throw Error.encodingFailed("\(Value.self) must implement Encodable in order to be wrapped in \(DynamicEncodable.self)")
         }
         var container = encoder.singleValueContainer()
         try encodable.encode(to: &container)
@@ -110,7 +110,7 @@ public struct DynamicDecodable<Value>: Decodable {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let typeIdentifier = try container.decode(String.self, forKey: .type)
             guard let type = DynamicDecodableRegistry.type(for: typeIdentifier) else {
-                throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in AnyDecodableRegistry.")
+                throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in \(DynamicDecodableRegistry.self).")
             }
             let decodable = try type.init(from: decoder)
             guard let _value = decodable as? Value else {
