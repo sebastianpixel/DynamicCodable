@@ -99,5 +99,6 @@ struct DetailScreenRouteHandler: RouteHandler {
 ```
 ## Constraints
 * Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodableProtocol`.
+* Those type identifiers need to be unique. Reason is that the abstract type of the property that is about to be decoded cannot be used as "namespace" if this property is a dictionary or array as that cannot be determined by the generic `Value` type of the property wrappers.
 * Types must be registered in `DynamicDecodableRegistry`  for decoding with an identifier of type String (which is then matched with the value of the `type` field for decoding).
 * Optionals should not be used with a Property Wrapper but by defining the property's type e.g. as `Optional<DynamicCodable<Route>>` if the value can be missing in the JSON. This is because in automatic `Decodable` synthetization the property is not considered to be an `Optional` as the Property Wrapper itself is a non-optional value.
