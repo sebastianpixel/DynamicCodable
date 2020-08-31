@@ -12,6 +12,10 @@ struct HomeScreen: Codable {
     @DynamicCodable var `self`: Route
     @DynamicCodable var routes: [Route]
     @DynamicCodable var someRouteDict: [String: Route]
+
+    // Optionals that are missing in the JSON (and are not replaced by `null`)
+    // can't be wrapped in `@DynamicCodable`, see "Constraints".
+    let someOptionalRoute: DynamicCodable<Route>?
 }
 ```
 The JSON for `HomeScreen` might look like this:
@@ -96,3 +100,4 @@ struct DetailScreenRouteHandler: RouteHandler {
 ## Constraints
 * Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodableProtocol`.
 * Types must be registered in `DynamicDecodableRegistry`  for decoding with an identifier of type String (which is then matched with the value of the `type` field for decoding).
+* Optionals should not be used with a Property Wrapper but by defining the property's type e.g. as `Optional<DynamicCodable<Route>>` if the value can be missing in the JSON. This is because in automatic `Decodable` synthetization the property is not considered to be an `Optional` as the Property Wrapper itself is a non-optional value.

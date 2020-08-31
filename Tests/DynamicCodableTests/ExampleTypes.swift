@@ -36,10 +36,20 @@ struct RouteMock: Codable, Equatable {
 }
 
 struct OptionalRouteMock: Codable, Equatable {
+    // The value in the JSON must not be missing but could be `null`.
+    // This is due to the propertyWrapper not being an optional value.
     @DynamicCodable var route: Route?
 
     init(route: Route?) {
         _route = DynamicCodable(wrappedValue: route)
+    }
+}
+
+struct OptionalRouteMockWithOptionalDynamicCodableProperty: Codable, Equatable {
+    let route: DynamicCodable<Route>?
+
+    init(route: Route?) {
+        self.route = route.map(DynamicCodable.init)
     }
 }
 

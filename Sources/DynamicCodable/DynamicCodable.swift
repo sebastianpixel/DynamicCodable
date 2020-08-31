@@ -142,11 +142,16 @@ public struct DynamicDecodable<Value>: Decodable {
             }
             value = array.map(\.wrappedValue)
         } else {
-            if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type {
+            let createKeyedContainer = { try decoder.container(keyedBy: CustomCodingKey.self) }
+
+            if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type,
+               (try? createKeyedContainer()) == nil {
+                value = optional.init(nilLiteral: ())
+            } else if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type,
+                      let container = try? createKeyedContainer(), container.allKeys.isEmpty {
                 value = optional.init(nilLiteral: ())
             } else {
-                let container = try decoder.container(keyedBy: CustomCodingKey.self)
-
+                let container = try createKeyedContainer()
                 // If a typeIdentifier can be retrieved `Value` is of type `DynamicDecodable`
                 // else it might be a `Dictionary<AnyHashable: DynamicDecodable<Any>>`.
                 if let typeIdentifier = try? container.decode(String.self, forKey: .init("type")) {

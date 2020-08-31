@@ -26,7 +26,7 @@ final class DynamicCodableTests: XCTestCase {
         XCTAssertEqual(mock, decoded)
     }
 
-    func testSomeOptionalEncodingAndDecoding() throws {
+    func testOptionalEncodingAndDecodingWithSomeValue() throws {
         let mock = OptionalRouteMock(route: detailScreen)
         let encoded = try encoder.encode(mock)
         let decoded = try decoder.decode(OptionalRouteMock.self, from: encoded)
@@ -34,12 +34,64 @@ final class DynamicCodableTests: XCTestCase {
         XCTAssertEqual(mock, decoded)
     }
 
-    func testNoneOptionalEncodingAndDecoding() throws {
+    func testOptionalEncodingAndDecodingWithNilValue() throws {
         let mock = OptionalRouteMock(route: nil)
         let encoded = try encoder.encode(mock)
         let decoded = try decoder.decode(OptionalRouteMock.self, from: encoded)
 
         XCTAssertEqual(mock, decoded)
+    }
+
+    func testOptionalDecodingWithNullValue() throws {
+        let json = """
+        {
+            "route": null
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try decoder.decode(OptionalRouteMock.self, from: json)
+
+        XCTAssertNil(decoded.route)
+    }
+
+    func testOptionalDecodingWithSomeValue() throws {
+        let mock = OptionalRouteMockWithOptionalDynamicCodableProperty(route: detailScreen)
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(OptionalRouteMockWithOptionalDynamicCodableProperty.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testOptionalDecodingWithNilValue() throws {
+        let mock = OptionalRouteMockWithOptionalDynamicCodableProperty(route: nil)
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(OptionalRouteMockWithOptionalDynamicCodableProperty.self, from: encoded)
+
+        XCTAssertEqual(mock, decoded)
+    }
+
+    func testOptionalPropertyWrapperDecodingWithNoValueThrowsErrorAsPropertyWrapperItselfIsNotNil() throws {
+        let json = "{}".data(using: .utf8)!
+
+        XCTAssertThrowsError(try decoder.decode(OptionalRouteMock.self, from: json))
+    }
+
+    func testOptionalDecodingWithoutPropertyWrapperWithNullValue() throws {
+        let json = """
+        {
+            "route": null
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try decoder.decode(OptionalRouteMockWithOptionalDynamicCodableProperty.self, from: json)
+
+        XCTAssertNil(decoded.route)
+    }
+
+    func testOptionalDecodingWithoutPropertyWrapperWithNoValue() throws {
+        let json = "{}".data(using: .utf8)!
+
+        XCTAssertNoThrow(try decoder.decode(OptionalRouteMockWithOptionalDynamicCodableProperty.self, from: json))
     }
 
     func testArrayEncodingAndDecoding() throws {
@@ -58,22 +110,16 @@ final class DynamicCodableTests: XCTestCase {
         XCTAssertEqual(mock, decoded)
     }
 
-    func testOptionalDecodingWithNullValue() throws {
-        let json = """
-        {
-            "route": null
-        }
-        """.data(using: .utf8)!
-
-        let decoded = try decoder.decode(OptionalRouteMock.self, from: json)
-
-        XCTAssertNil(decoded.route)
-    }
-
     static var allTests = [
         ("testStandardEncodingAndDecoding", testStandardEncodingAndDecoding),
-        ("testSomeOptionalEncodingAndDecoding", testSomeOptionalEncodingAndDecoding),
-        ("testNoneOptionalEncodingAndDecoding", testNoneOptionalEncodingAndDecoding),
+        ("testOptionalEncodingAndDecodingWithSomeValue", testOptionalEncodingAndDecodingWithSomeValue),
+        ("testOptionalEncodingAndDecodingWithNilValue", testOptionalEncodingAndDecodingWithNilValue),
+        ("testOptionalDecodingWithNullValue", testOptionalDecodingWithNullValue),
+        ("testOptionalDecodingWithSomeValue", testOptionalDecodingWithSomeValue),
+        ("testOptionalDecodingWithNilValue", testOptionalDecodingWithNilValue),
+        ("testOptionalPropertyWrapperDecodingWithNoValueThrowsErrorAsPropertyWrapperItselfIsNotNil", testOptionalPropertyWrapperDecodingWithNoValueThrowsErrorAsPropertyWrapperItselfIsNotNil),
+        ("testOptionalDecodingWithoutPropertyWrapperWithNullValue", testOptionalDecodingWithoutPropertyWrapperWithNullValue),
+        ("testOptionalDecodingWithoutPropertyWrapperWithNoValue", testOptionalDecodingWithoutPropertyWrapperWithNoValue),
         ("testArrayEncodingAndDecoding", testArrayEncodingAndDecoding),
         ("testDictionaryEncodingAndDecoding", testDictionaryEncodingAndDecoding)
     ]
