@@ -74,7 +74,8 @@ public struct DynamicEncodable<Value>: Encodable {
                 try value.encode(for: codingKey, to: &container)
             }
         } else if let optional = wrappedValue as? OptionalProtocol, optional.isNil {
-            return
+            var container = encoder.singleValueContainer()
+            try container.encodeNil()
         } else {
             throw Error.encodingFailed("\(Value.self) must conform to Encodable.")
         }
