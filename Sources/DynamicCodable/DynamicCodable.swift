@@ -123,6 +123,8 @@ extension DynamicEncodable: Equatable {
 @propertyWrapper
 public struct DynamicDecodable<Value>: Decodable {
 
+    private typealias OptionalType = (OptionalProtocol & ExpressibleByNilLiteral).Type
+
     public enum Error: Swift.Error {
         case decodingFailed(String)
     }
@@ -141,17 +143,20 @@ public struct DynamicDecodable<Value>: Decodable {
                 try array.append(unkeyedContainer.decode(DynamicDecodable<Any>.self))
             }
             value = array.map(\.wrappedValue)
+
         } else {
             let createKeyedContainer = { try decoder.container(keyedBy: CustomCodingKey.self) }
 
-            if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type,
-               (try? createKeyedContainer()) == nil {
+            if let optional = Value.self as? OptionalType, (try? createKeyedContainer()) == nil {
                 value = optional.init(nilLiteral: ())
-            } else if let optional = Value.self as? (OptionalProtocol & ExpressibleByNilLiteral).Type,
+
+            } else if let optional = Value.self as? OptionalType,
                       let container = try? createKeyedContainer(), container.allKeys.isEmpty {
                 value = optional.init(nilLiteral: ())
+
             } else {
                 let container = try createKeyedContainer()
+
                 // If a typeIdentifier can be retrieved `Value` is of type `DynamicDecodable`
                 // else it might be a `Dictionary<AnyHashable: DynamicDecodable<Any>>`.
                 if let typeIdentifier = try? container.decode(String.self, forKey: .init("type")) {
@@ -159,6 +164,7 @@ public struct DynamicDecodable<Value>: Decodable {
                         throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in \(DynamicDecodableRegistry.self).")
                     }
                     value = try type.init(from: decoder)
+
                 } else {
                     value = try container.allKeys.reduce(into: [AnyHashable: Any]()) {
                         $0[$1.stringValue] = try container.decode(DynamicDecodable<Any>.self, forKey: $1).wrappedValue
