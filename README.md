@@ -84,7 +84,7 @@ struct HomeScreenRouteHandler: RouteHandler {
 
 // Interface module "DetailScreen"
 struct DetailScreenRoute: Route {
-    static let type = "homescreen"
+    static let type = "detailscreen"
 
     let type: String
     let id: UUID
