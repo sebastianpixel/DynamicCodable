@@ -50,10 +50,6 @@ private struct CustomCodingKey: CodingKey {
 @propertyWrapper
 public struct DynamicEncodable<Value>: Encodable {
 
-    public enum Error: Swift.Error {
-        case encodingFailed(String)
-    }
-
     public var wrappedValue: Value
 
     public init(wrappedValue: Value) {
@@ -77,7 +73,13 @@ public struct DynamicEncodable<Value>: Encodable {
             var container = encoder.singleValueContainer()
             try container.encodeNil()
         } else {
-            throw Error.encodingFailed("\(Value.self) must conform to Encodable.")
+            throw EncodingError.invalidValue(
+                Value.self,
+                .init(
+                    codingPath: encoder.codingPath,
+                    debugDescription: "Type not conforming to Encodable."
+                )
+            )
         }
     }
 }
