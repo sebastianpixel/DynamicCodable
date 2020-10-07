@@ -202,10 +202,6 @@ public final class DynamicCodable<Value>: Codable {
         self.wrappedValue = wrappedValue
     }
 
-    private enum CodingKeys: CodingKey {
-        case type
-    }
-
     required public convenience init(from decoder: Decoder) throws {
         try self.init(wrappedValue: DynamicDecodable<Value>(from: decoder).wrappedValue)
     }
