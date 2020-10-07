@@ -126,10 +126,6 @@ public struct DynamicDecodable<Value>: Decodable {
 
     private typealias OptionalType = (OptionalProtocol & ExpressibleByNilLiteral).Type
 
-    public enum Error: Swift.Error {
-        case decodingFailed(String)
-    }
-
     public var wrappedValue: Value
 
     public init(wrappedValue: Value) {
@@ -162,7 +158,11 @@ public struct DynamicDecodable<Value>: Decodable {
                 // else it might be a `Dictionary<AnyHashable: DynamicDecodable<Any>>`.
                 if let typeIdentifier = try? container.decode(String.self, forKey: .init("type")) {
                     guard let type = DynamicDecodableRegistry.type(for: typeIdentifier) else {
-                        throw Error.decodingFailed("Configuration error: no type registered for identifier \(typeIdentifier) in \(DynamicDecodableRegistry.self).")
+                        throw DecodingError.dataCorrupted(
+                            .init(
+                                codingPath: container.codingPath,
+                                debugDescription: "Configuration error: no type registered for identifier \(typeIdentifier) in \(DynamicDecodableRegistry.self).")
+                        )
                     }
                     value = try type.init(from: decoder)
 
@@ -177,7 +177,13 @@ public struct DynamicDecodable<Value>: Decodable {
         if let value = value as? Value {
             self.init(wrappedValue: value)
         } else {
-            throw Error.decodingFailed("Could not cast type \(type(of: value)) to \(Value.self)")
+            throw DecodingError.typeMismatch(
+                Value.self,
+                .init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Could not cast type \(type(of: value))."
+                )
+            )
         }
     }
 }

@@ -34,14 +34,6 @@ final class DynamicCodableTests: XCTestCase {
         XCTAssertEqual(mock, decoded)
     }
 
-    func testOptionalEncodingAndDecodingWithNilValue() throws {
-        let mock = OptionalRouteMock(route: nil)
-        let encoded = try encoder.encode(mock)
-        let decoded = try decoder.decode(OptionalRouteMock.self, from: encoded)
-
-        XCTAssertEqual(mock, decoded)
-    }
-
     func testOptionalDecodingWithNullValue() throws {
         let json = """
         {
@@ -113,7 +105,6 @@ final class DynamicCodableTests: XCTestCase {
     static var allTests = [
         ("testStandardEncodingAndDecoding", testStandardEncodingAndDecoding),
         ("testOptionalEncodingAndDecodingWithSomeValue", testOptionalEncodingAndDecodingWithSomeValue),
-        ("testOptionalEncodingAndDecodingWithNilValue", testOptionalEncodingAndDecodingWithNilValue),
         ("testOptionalDecodingWithNullValue", testOptionalDecodingWithNullValue),
         ("testOptionalDecodingWithSomeValue", testOptionalDecodingWithSomeValue),
         ("testOptionalDecodingWithNilValue", testOptionalDecodingWithNilValue),
