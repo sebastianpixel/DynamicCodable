@@ -27,6 +27,16 @@ struct DetailScreenRoute: Route, Codable, Equatable {
     }
 }
 
+struct UnknownRoute: Route, Codable, Equatable {
+    static let type = "unknown"
+
+    let type: String
+
+    init() {
+        type = Self.type
+    }
+}
+
 struct RouteMock: Codable, Equatable {
     @DynamicCodable var route: Route
 

@@ -102,6 +102,26 @@ final class DynamicCodableTests: XCTestCase {
         XCTAssertEqual(mock, decoded)
     }
 
+    func testArrayEncodingAndDecodingWithUnknownValue() throws {
+        let mock = ArrayMock(routes: [detailScreen, UnknownRoute(), homeScreen])
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(ArrayMock.self, from: encoded)
+
+        XCTAssertEqual(decoded.routes.count, 2)
+        XCTAssertEqual(decoded.routes[0].type, mock.routes[0].type)
+        XCTAssertEqual(decoded.routes[1].type, mock.routes[2].type)
+    }
+
+    func testDictionaryEncodingAndDecodingWithUnknownValue() throws {
+        let mock = DictionaryMock(routes: [detailScreen, UnknownRoute(), homeScreen])
+        let encoded = try encoder.encode(mock)
+        let decoded = try decoder.decode(DictionaryMock.self, from: encoded)
+
+        XCTAssertEqual(decoded.routes.count, 2)
+        XCTAssertEqual(decoded.routes[detailScreen.type]?.type, detailScreen.type)
+        XCTAssertEqual(decoded.routes[homeScreen.type]?.type, homeScreen.type)
+    }
+
     static var allTests = [
         ("testStandardEncodingAndDecoding", testStandardEncodingAndDecoding),
         ("testOptionalEncodingAndDecodingWithSomeValue", testOptionalEncodingAndDecodingWithSomeValue),
@@ -112,6 +132,8 @@ final class DynamicCodableTests: XCTestCase {
         ("testOptionalDecodingWithoutPropertyWrapperWithNullValue", testOptionalDecodingWithoutPropertyWrapperWithNullValue),
         ("testOptionalDecodingWithoutPropertyWrapperWithNoValue", testOptionalDecodingWithoutPropertyWrapperWithNoValue),
         ("testArrayEncodingAndDecoding", testArrayEncodingAndDecoding),
-        ("testDictionaryEncodingAndDecoding", testDictionaryEncodingAndDecoding)
+        ("testDictionaryEncodingAndDecoding", testDictionaryEncodingAndDecoding),
+        ("testArrayEncodingAndDecodingWithUnknownValue", testArrayEncodingAndDecodingWithUnknownValue),
+        ("testDictionaryEncodingAndDecodingWithUnknownValue", testDictionaryEncodingAndDecodingWithUnknownValue)
     ]
 }
