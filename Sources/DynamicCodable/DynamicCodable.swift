@@ -130,10 +130,6 @@ public struct DynamicDecodable<Value>: Decodable {
 
     public var wrappedValue: Value
 
-    public init(wrappedValue: Value) {
-        self.wrappedValue = wrappedValue
-    }
-
     public init(from decoder: Decoder) throws {
         let value: Any
         if var unkeyedContainer = try? decoder.unkeyedContainer() {
@@ -177,7 +173,7 @@ public struct DynamicDecodable<Value>: Decodable {
         }
 
         if let value = value as? Value {
-            self.init(wrappedValue: value)
+            wrappedValue = value
         } else {
             throw DecodingError.typeMismatch(
                 Value.self,
