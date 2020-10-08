@@ -70,6 +70,12 @@ public struct DynamicDecodable<Value>: Decodable {
     }
 }
 
+extension DynamicDecodable: Hashable where Value: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(wrappedValue)
+    }
+}
+
 extension DynamicDecodable: Equatable where Value: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.wrappedValue == rhs.wrappedValue

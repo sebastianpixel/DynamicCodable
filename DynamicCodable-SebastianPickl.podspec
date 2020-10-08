@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name         = 'DynamicCodable-SebastianPickl'
   s.module_name  = 'DynamicCodable'
-  s.version      = '0.2.0'
+  s.version      = '0.2.1'
   s.summary      = 'Swift PropertyWrappers that use Codable to decode and encode types that are determined at runtime based on JSON data.'
   s.description  = <<-DESC
   Swift Property Wrappers based on Codable for decoding (and encoding) abstract types that are defined in the (JSON) data that should be decoded.

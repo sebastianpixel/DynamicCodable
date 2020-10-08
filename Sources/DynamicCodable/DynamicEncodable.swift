@@ -57,6 +57,13 @@ private extension Array where Element == Encodable {
     }
 }
 
+extension DynamicEncodable: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        let jsonEncoder = JSONEncoder()
+        hasher.combine(try? jsonEncoder.encode(self))
+    }
+}
+
 extension DynamicEncodable: Equatable {
     public static func == (lhs: DynamicEncodable<Value>, rhs: DynamicEncodable<Value>) -> Bool {
         let jsonEncoder = JSONEncoder()

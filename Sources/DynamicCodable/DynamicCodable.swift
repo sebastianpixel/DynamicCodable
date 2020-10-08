@@ -15,6 +15,12 @@ public final class DynamicCodable<Value>: Codable {
     }
 }
 
+extension DynamicCodable: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(DynamicEncodable(wrappedValue: wrappedValue))
+    }
+}
+
 extension DynamicCodable: Equatable {
     public static func == (lhs: DynamicCodable<Value>, rhs: DynamicCodable<Value>) -> Bool {
         DynamicEncodable(wrappedValue: lhs) == DynamicEncodable(wrappedValue: rhs)
