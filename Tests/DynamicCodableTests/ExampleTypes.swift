@@ -1,7 +1,7 @@
 import DynamicCodable
 import Foundation
 
-protocol Route: DynamicCodableProtocol {
+protocol Route: TypeIdentifiable {
     static var type: String { get }
 }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol DynamicCodableProtocol {
+public protocol TypeIdentifiable {
     /// Instance type property necessary for retrieving the type to
     /// decode and encoding it for later re-decoding.
     ///

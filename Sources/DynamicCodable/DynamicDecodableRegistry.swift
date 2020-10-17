@@ -1,7 +1,7 @@
 /// The one location where dynamic type identifiers are mapped
 /// to the types that should be decoded.
 public final class DynamicDecodableRegistry {
-    public typealias DynamicDecodable = DynamicCodableProtocol & Decodable
+    public typealias DynamicDecodable = TypeIdentifiable & Decodable
 
     struct NoTypeRegistered: Error {
         let typeIdentifier: String

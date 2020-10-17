@@ -6,7 +6,7 @@ Swift Property Wrappers based on `Codable` for decoding (and encoding) types tha
 
 ## Example: Routes
 ```Swift
-protocol Route: DynamicCodableProtocol {}
+protocol Route: TypeIdentifiable {}
 
 struct HomeScreen: Codable {
     @DynamicCodable var `self`: Route
@@ -47,7 +47,7 @@ The JSON for `HomeScreen` might look like this:
     }
 }
 ```
-`Route`s have the field `type` in common (which also is the single requirement of `DynamicCodableProtocol`) which identifies the actual type that should be deserialized. In order for this to work types have to be registered in `DynamicDecodableRegistry` with their respective identifier.
+`Route`s have the field `type` in common (which also is the single requirement of `TypeIdentifiable`) which identifies the actual type that should be deserialized. In order for this to work types have to be registered in `DynamicDecodableRegistry` with their respective identifier.
 ```Swift
 DynamicDecodableRegistry.register(DetailScreenRoute.self, typeIdentifier: DetailScreenRoute.type)
 DynamicDecodableRegistry.register(HomeScreenRoute.self, typeIdentifier: HomeScreenRoute.type)
@@ -98,7 +98,7 @@ struct DetailScreenRouteHandler: RouteHandler {
 }
 ```
 ## Constraints
-* Types need to be identified in JSON via a field `type` which is the protocol requirement of `DynamicCodableProtocol`.
+* Types need to be identified in JSON via a field `type` which is the protocol requirement of `TypeIdentifiable`.
 * Those type identifiers need to be unique. Reason is that the abstract type of the property that is about to be decoded cannot be used as "namespace" if this property is a dictionary or array as in those cases the dictionary's / array's type cannot be determined by the generic `Value` type of the property wrappers.
 * Types must be registered in `DynamicDecodableRegistry` for decoding with an identifier of type String (which is then matched with the value of the `type` field for decoding).
 * Optionals must not be used with a Property Wrapper but by defining the property's type e.g. as `Optional<DynamicCodable<Route>>` if the value can be missing in the JSON. This is because in automatic `Decodable` synthetization the property is not considered to be an `Optional` as the Property Wrapper itself is a non-optional value.
